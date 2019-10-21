@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Fri Aug 30 18:19:36 2019
-
-@author: power
+@author: Powers
 train_models method is based on tensorflow MNIST GAN tutorial
 Wasserstein type details are from ``Wasserstein GAN'' paper by Arjovsky et al.
 and ``Improved Training of Wasserstein GANs'' by Gulrajani et al.
