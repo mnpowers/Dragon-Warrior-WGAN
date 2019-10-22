@@ -233,7 +233,50 @@ def sample_gen_and_wass_losses(gen_model, disc_model, num_images, noise_dim):
     
     return gen_tot/10, wass_tot/10
     
+
+def update_models( gen_model, disc_model, gen_optimizer, disc_optimizer,
+                  real_images, noise, sample_size, lambd, train_gen ):
+    """
+    Performs a single step of gradient descent on disc_model, and also on 
+    gen_model if train_gen == true
+    """
     
+    with tf.GradientTape() as gen_tape, tf.GradientTape() as disc_tape:
+        gen_tape.watch( gen_model.trainable_variables )
+        disc_tape.watch( disc_model.trainable_variables )
+        
+        fake_images = gen_model(noise, training=train_gen)
+        fake_output = disc_model(fake_images, training=True)
+        real_output = disc_model(real_images, training=True)
+        wass_loss = wasserstein_loss(real_output, fake_output)
+        gen_loss = None
+        if train_gen:
+            gen_loss = generator_loss(fake_output)
+        
+        #For gradient penalty, we take randomly weighted averages
+        #of real and fake images, and calculate gradients of
+        #discriminator on these averages
+        eps = tf.random.uniform((sample_size,1,1,1))  #Random weights
+        av_images = eps * real_images + (1 - eps) * fake_images
+        with tf.GradientTape() as gp_tape:
+            gp_tape.watch( av_images )
+            av_output = disc_model(av_images, training=True)
+        av_im_grad = gp_tape.gradient(av_output, av_images)
+        #convert list to tensor
+        av_im_grad = tf.compat.v1.convert_to_tensor(av_im_grad)
+        #reshape to matrix whose rows are gradients
+        av_im_grad = tf.reshape(av_im_grad, (sample_size, 64*64*3))
+        disc_loss = discriminator_loss(wass_loss, av_im_grad, lambd)
+                
+    disc_grad = disc_tape.gradient(disc_loss, disc_model.trainable_variables)
+    disc_optimizer.apply_gradients(zip(disc_grad, disc_model.trainable_variables))
+
+    if train_gen:
+        gen_grad = gen_tape.gradient(gen_loss, gen_model.trainable_variables)
+        gen_optimizer.apply_gradients(zip(gen_grad, gen_model.trainable_variables))
+    
+    
+
 def train_models( epochs, gen_rate, disc_rate, prev_epochs, batch_size, noise_dim, 
                            n_critic, tag, lambd = 10, num_images = 68237 ):
     """
@@ -281,48 +324,15 @@ def train_models( epochs, gen_rate, disc_rate, prev_epochs, batch_size, noise_di
         minibatches = createMiniBatches( indices, batch_size  )
 
         for i in range(len(minibatches)):
-            
             #Only train generator if n_critic divides i
             train_gen = ( i%n_critic == 0 )
             
             real_images = crop_images( minibatches[i])
-            sample_size = real_images.shape[0]  #may be smaller than batch_size
+            sample_size = real_images.shape[0]  #last mini batch may have different size
             noise = tf.random.normal([sample_size, noise_dim])
                
-            with tf.GradientTape() as gen_tape, tf.GradientTape() as disc_tape:
-                gen_tape.watch( gen_model.trainable_variables )
-                disc_tape.watch( disc_model.trainable_variables )
-                
-                fake_images = gen_model(noise, training=train_gen)
-                fake_output = disc_model(fake_images, training=True)
-                real_output = disc_model(real_images, training=True)
-                wass_loss = wasserstein_loss(real_output, fake_output)
-                gen_loss = None
-                if train_gen:
-                    gen_loss = generator_loss(fake_output)
-                
-                #For gradient penalty, we take randomly weighted averages
-                #of real and fake images, and calculate gradients of
-                #discriminator on these averages
-                eps = tf.random.uniform((sample_size,1,1,1))  #Random weights
-                av_images = eps * real_images + (1 - eps) * fake_images
-                with tf.GradientTape() as gp_tape:
-                    gp_tape.watch( av_images )
-                    av_output = disc_model(av_images, training=True)
-                av_im_grad = gp_tape.gradient(av_output, av_images)
-                #convert list to tensor
-                av_im_grad = tf.compat.v1.convert_to_tensor(av_im_grad)
-                #reshape to matrix whose rows are gradients
-                av_im_grad = tf.reshape(av_im_grad, (sample_size, 64*64*3))
-                disc_loss = discriminator_loss(wass_loss, av_im_grad, lambd)
-                
-            disc_grad = disc_tape.gradient(disc_loss, disc_model.trainable_variables)
-            disc_optimizer.apply_gradients(zip(disc_grad, disc_model.trainable_variables))
-
-            if train_gen:
-                gen_grad = gen_tape.gradient(gen_loss, gen_model.trainable_variables)
-                gen_optimizer.apply_gradients(zip(gen_grad, gen_model.trainable_variables))
-                
+            update_models( gen_model, disc_model, gen_optimizer, disc_optimizer,
+                          real_images, noise, sample_size, lambd, train_gen )
                 
         # Save the model every epoch
         gen_checkpoint.save(file_prefix = gen_checkpoint_prefix)
