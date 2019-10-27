@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 @author: Powers
-train_models method is based on tensorflow MNIST GAN tutorial
+train_models function is based on tensorflow MNIST GAN tutorial
 Wasserstein type details are from ``Wasserstein GAN'' paper by Arjovsky et al.
 and ``Improved Training of Wasserstein GANs'' by Gulrajani et al.
 """
