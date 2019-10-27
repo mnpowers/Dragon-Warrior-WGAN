@@ -20,7 +20,7 @@ import datetime
 def make_generator_model():
     """
     Returns model for generating images. 
-    The model takes as input 128-dimensional vectors, and outputs 
+    The model takes as input 64-dimensional vectors, and outputs 
     tensors of size 64x64x3, representing images.
     """
     model = tf.keras.Sequential()
