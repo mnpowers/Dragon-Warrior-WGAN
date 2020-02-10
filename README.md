@@ -31,3 +31,11 @@ In this scheme I trained an upscaler to recover gameplay images which have first
 I then trained a WGAN to produce 16x16 images which look like the downscaled gameplay images. The code is contained in Dragon_Warrior_WGAN_low_res.py. The generator/discriminator were trained for 33 epochs. Here is an example out the GAN outputs, before and after being fed through the upscaler:
 
 ![Image description](WGAN_upscaler_images/GAN_and_upscaler.png)
+
+Here is a side-by-side comparison of some real and fake images:
+
+![Image description](WGAN_upscaler_images/fake_vs_real_comparison.png)
+
+While not quite perfect, there is a significant improvement over the end-to-end scheme. Finally, here are some images showing how the generated output varies as we move along two dimensions in the latent space:
+
+![Image description](WGAN_upscaler_images/two_axes_in_latent_space.png)
