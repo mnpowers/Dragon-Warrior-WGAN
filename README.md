@@ -36,6 +36,8 @@ Here is a side-by-side comparison of some real and fake images:
 
 ![Image description](WGAN_upscaler_images/fake_vs_real_comparison.png)
 
-While not quite perfect, there is a significant improvement over the end-to-end scheme. Finally, here are some images showing how the generated output varies as we move along two dimensions in the latent space:
+Finally, here are some images showing how the generated output varies as we move along two dimensions in the latent space:
 
 ![Image description](WGAN_upscaler_images/two_axes_in_latent_space.png)
+
+While the outputs of the upscaler scheme are not completely perfect, many outputs are indistinguishable from real images, and there is a significant improvement over the end-to-end scheme. 
