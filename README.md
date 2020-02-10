@@ -1,8 +1,8 @@
 # Dragon-Warrior-WGAN
 Dragon Warrior is a video game released on the Nintendo Entertainment System (NES) in 1989. Most of the gameplay involves exploring the world map. The problem considered here is approximating the distribution of the images which the player sees during this exploration, using a generative adversarial network (GAN). The dataset used consists of about 68,000 images pulled from gameplay footage which I recorded as I played the game. Here is an example of gameplay:
 ![Image description](WGAN_upscaler_images/full_size_example_0.png)
-NES images have dimensions 256x240, but to make the problem more tractible, I cropped them to 64x64:
-![Image description](real images/real_images_1.png)
+NES images have dimensions 256x240, but I was training models on my laptop, so to make the problem more tractible, I cropped the images to 64x64:
+![Image description](real_images/real_images_1.png)
 This distribution of images is interesting because it consists of a relatively small number of very distinct assests that may occur in many different configurations (contrast this with images of faces, for example). The problem is also interesting because the images need to be nearly pixel-perfect for them to look like real images of an NES game. 
 
 After experimenting with a "vanilla" GAN, I changed the algorithm to a Wasserstein GAN (WGAN), following the paper "Wasserstein GAN" by Arjovsky, Chintala, and Bottou. After this, performance was still unsatisfactory, so I upraged to a WGAN with gradient penalty, following the paper "Improved Training of Wasserstein GANs" by Gulrajani, Ahmed, Arjovsky, Dumoulin, and Courville. The code is written with python, using TensorFlow and Keras. The code and images given here are from two versions of the model, which I will call the "end-to-end scheme" and the "upscaler scheme".
@@ -18,3 +18,7 @@ The code for this scheme is contained in Dragon_Warrior_WGAN.py. The generator a
 The folder "images_generated_along_axes" contains some collections of images showing how the output of the generator varies as we move along the first two dimensions of the latent space.
 
 
+Upscaler Scheme
+
+In this scheme I trained an upscaler to recover gameplay images which have first been downscaled from 64x64 to 16x16, and then have had some Gaussian noise added. The code is contained in Dragon_Warrior_upscaler.py. The model was trained for 60 epochs. Here are some example outputs:
+![Image description](WGAN_upscaler_images/upscaler_results.png)
